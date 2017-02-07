@@ -1,0 +1,67 @@
+---
+title: "knitr Example-- 2"
+date: "2017-02-07"
+output:
+    html_document:
+        css: bootstrap.css
+        toc: true
+        toc_depth: 4
+        theme: cosmo
+        highlight: haddock
+---
+
+### Plot Compilation
+
+```{r fig.width=14, fig.height=10}
+
+setwd("/Users/subasishdas1/Desktop/TAMU_ITE_WKSHP1_Feb17/Data")
+mm <- read.csv("data03.csv")
+head(mm)
+
+library(ggplot2)
+library(gridExtra)
+plot1 <- ggplot(mm, aes(x=reorder(Cond, Freq), y= Freq))+theme_bw()+
+  geom_bar(stat="identity", colour="red")+
+  xlab("Total Crashes") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+plot2 <- ggplot(mm, aes(x=reorder(Cond, Fat), y= Fat))+theme_bw()+
+  geom_bar(stat="identity", colour="blue")+
+  xlab("Fatal Crashes") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+plot3 <- ggplot(mm, aes(x=reorder(Cond, Severe), y= Severe))+theme_bw()+
+  geom_bar(stat="identity", colour="yellow")+
+  xlab("Severe Crashes") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+plot4 <- ggplot(mm, aes(x=reorder(Cond, PDO), y= PDO))+theme_bw()+
+  geom_bar(stat="identity", colour="green")+
+  xlab("PDO Crashes") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+grid.arrange(plot1, plot2, plot3, plot4, ncol=2)
+
+```
+
+
+### Variable Importance
+```{r fig.width=14, fig.height=5}
+library(randomForest)
+setwd("/Users/subasishdas1/Desktop/TAMU_ITE_WKSHP1_Feb17/Data")
+all_fatal <- read.csv("data04.csv")
+dim(all_fatal)
+fat4 <- all_fatal[c(4:12)]
+names(fat4)
+dim(fat4)
+fat5 <- fat4[complete.cases(fat4),]
+fat5$LIGHTING_CD <- as.factor(as.numeric(fat5$LIGHTING_CD))
+fat.rf <- randomForest(LIGHTING_CD ~ ., fat5, do.trace=5, ntree=20)
+print(fat.rf)
+varImpPlot(fat.rf, sort = TRUE,  pch = 19, col =2, cex=1.3,
+           main = "Imp. Var. Plot")
+```
+
+
+
+

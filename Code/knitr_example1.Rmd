@@ -1,0 +1,213 @@
+---
+title: "knitr Example-- 1"
+date: "February 7, 2017"
+output:
+    html_document:
+        toc: true
+        toc_depth: 4
+        theme: cosmo
+        highlight: haddock
+---
+
+
+## Data and summary
+```{r}
+setwd("/Users/subasishdas1/Desktop/TAMU_ITE_WKSHP1_Feb17/Data")
+all <- read.csv("data02.csv") 
+dim(all)
+names(all)
+
+
+
+all1 <- all[-c(1,2,3,6,7,9,11, 14,16, 17)]
+names(all1)
+table(all1$CLASS_DESC)
+
+all2 <- all[-c(1,2,3,6,7,9,12, 14,16, 17)]
+names(all2)
+
+
+rural2 <- subset(all1, CLASS_DESC=="Rural 2 Lane")
+dim(rural2)
+rural2_1 <- rural2[-c(3,4)]
+names(rural2_1)
+
+ruralmul <- subset(all2, CLASS_DESC=="Rural 4 Lane"| CLASS_DESC=="Rural 4 Lane Divided")
+dim(ruralmul)
+ruralmul_1 <- ruralmul[-c(3,4)]
+
+ruralint <- subset(all2, CLASS_DESC=="Rural Interstate")
+dim(ruralint)
+ruralint_1 <- ruralint[-c(3,4)]
+
+urban2 <- subset(all1, CLASS_DESC=="Urban 2 Lane")
+dim(urban2)
+urban2_1 <- urban2[-c(3,4)]
+
+urbanmul <- subset(all2, CLASS_DESC=="Urban 4 Lane"| CLASS_DESC=="Urban 4 Lane Divided")
+dim(ruralmul)
+urbanmul_1 <- urbanmul[-c(3,4)]
+
+urbanint <- subset(all2, CLASS_DESC=="Urban Interstate")
+dim(urbanint)
+urbanint_1 <- urbanint[-c(3,4)]
+
+## summany statistics
+summary(rural2_1)
+summary(ruralmul_1)
+summary(ruralint_1)
+summary(urban2_1)
+summary(urbanmul_1)
+summary(urbanint_1)
+
+```
+
+
+## Exploratory Data Analysis
+```{r}
+## Important Variable Selection
+## By Randomforest
+library(randomForest)
+impvar <- randomForest(AVG_CRASH~., data = rural2_1, ntree=100, keep.forest=FALSE, importance=TRUE)
+varImpPlot(impvar, main="Rural 2-lane")
+impvar <- randomForest(AVG_CRASH~., data = ruralmul_1, ntree=100, keep.forest=FALSE, importance=TRUE)
+varImpPlot(impvar, main="Rural Muti-lane")
+impvar <- randomForest(AVG_CRASH~., data = ruralint_1, ntree=100, keep.forest=FALSE, importance=TRUE)
+varImpPlot(impvar, main="Rural Interstates")
+
+library(randomForest)
+impvar <- randomForest(AVG_CRASH~., data = urban2_1, ntree=100, keep.forest=FALSE, importance=TRUE)
+varImpPlot(impvar, main="Urban 2-lane")
+impvar <- randomForest(AVG_CRASH~., data = urbanmul_1, ntree=100, keep.forest=FALSE, importance=TRUE)
+varImpPlot(impvar, main="Urban Muti-lane")
+impvar <- randomForest(AVG_CRASH~., data = urbanint_1, ntree=100, keep.forest=FALSE, importance=TRUE)
+varImpPlot(impvar, main="Urban Interstates")
+
+
+## Correlation plot
+library(corrplot)
+#corrp <- cor(rural2_1)
+#corrplot(corrp, method = "circle")
+corrp <- cor(ruralmul_1)
+corrplot(corrp, method = "circle")
+corrp <- cor(ruralint_1)
+corrplot(corrp, method = "circle")
+library(corrplot)
+corrp <- cor(urban2_1)
+corrplot(corrp, method = "circle")
+corrp <- cor(urbanmul_1)
+corrplot(corrp, method = "circle")
+corrp <- cor(urbanint_1)
+corrplot(corrp, method = "circle")
+```
+
+
+
+## Algorithmic Modeling
+### Trainset
+```{r fig.width=12, fig.height=6}
+library(e1071)
+library(caret)
+
+
+## Modeling for trainset [all data]
+### Rural 2-lane
+svm.model <- svm(AVG_CRASH~., data = rural2_1, cost = 100, gamma =1)
+svm.pred  <- predict(svm.model, rural2_1[1:5])
+sd(svm.pred)
+pl <- cbind(obs= rural2_1$AVG_CRASH, pred=svm.pred)
+pl <- cbind(obs= rural2_1$AVG_CRASH, pred=abs(svm.pred), diff=abs(svm.pred)-rural2_1$AVG_CRASH)
+pl <- data.frame(pl)
+svm_err_all <- rural2_1$AVG_CRASH- svm.pred
+(svm_rmse1 <- sqrt(mean(svm_err_all^2)))
+
+library(ggplot2)
+p1 <- ggplot(pl, aes(obs, pred))
+p1a <- p1 + geom_point(colour = "#9A8822", size = 1.3)+ theme_bw()+ geom_abline(slope=1,size = 0.6)+ geom_abline(intercept=3.5, slope=1, color="#F98400",size = 0.6,linetype=4)+geom_abline(intercept=-3.5, slope=1, color="#F98400",size = 0.6,linetype=4)+
+labs(title = "Rural 2-lane [trainset]")+labs(x = "Observed", y="Predicted")
+p1a
+
+### Rural Multilane
+svm.model <- svm(AVG_CRASH~., data = ruralmul_1, cost = 100, gamma =1)
+svm.pred  <- predict(svm.model, ruralmul_1[1:5])
+sd(svm.pred)
+pl <- cbind(obs= ruralmul_1$AVG_CRASH, pred=svm.pred)
+pl <- cbind(obs= ruralmul_1$AVG_CRASH, pred=abs(svm.pred), diff=abs(svm.pred)-ruralmul_1$AVG_CRASH)
+pl <- data.frame(pl)
+svm_err_all <- ruralmul_1$AVG_CRASH- svm.pred
+(svm_rmse1 <- sqrt(mean(svm_err_all^2)))
+
+library(ggplot2)
+p1 <- ggplot(pl, aes(obs, pred))
+p1a <- p1 + geom_point(colour = "#9A8822", size = 1.3)+ theme_bw()+ geom_abline(slope=1,size = 0.6)+ geom_abline(intercept=4.6, slope=1, color="#F98400",size = 0.6,linetype=4)+geom_abline(intercept=-4.6, slope=1, color="#F98400",size = 0.6,linetype=4)+
+labs(title = "Rural Multilane [trainset]")+labs(x = "Observed", y="Predicted")
+p1a
+
+### Rural Interstates
+svm.model <- svm(AVG_CRASH~., data = ruralint_1, cost = 100, gamma =1)
+svm.pred  <- predict(svm.model, ruralint_1[1:5])
+sd(svm.pred)
+pl <- cbind(obs= ruralint_1$AVG_CRASH, pred=svm.pred)
+pl <- cbind(obs= ruralint_1$AVG_CRASH, pred=abs(svm.pred), diff=abs(svm.pred)-ruralint_1$AVG_CRASH)
+pl <- data.frame(pl)
+svm_err_all <- ruralint_1$AVG_CRASH- svm.pred
+(svm_rmse1 <- sqrt(mean(svm_err_all^2)))
+
+library(ggplot2)
+p1 <- ggplot(pl, aes(obs, pred))
+p1a <- p1 + geom_point(colour = "#9A8822", size = 1.3)+ theme_bw()+ geom_abline(slope=1,size = 0.6)+ geom_abline(intercept=16.3, slope=1, color="#F98400",size = 0.6,linetype=4)+geom_abline(intercept=-16.3, slope=1, color="#F98400",size = 0.6,linetype=4)+
+labs(title = "Rural Interstates [trainset]")+labs(x = "Observed", y="Predicted")
+p1a
+
+### Urban 2-lane
+svm.model <- svm(AVG_CRASH~., data = urban2_1, cost = 100, gamma =1)
+svm.pred  <- predict(svm.model, urban2_1[1:5])
+sd(svm.pred)
+pl <- cbind(obs= rural2_1$AVG_CRASH, pred=svm.pred)
+pl <- cbind(obs= rural2_1$AVG_CRASH, pred=abs(svm.pred), diff=abs(svm.pred)-rural2_1$AVG_CRASH)
+pl <- data.frame(pl)
+svm_err_all <- rural2_1$FREQ- svm.pred
+(svm_rmse1 <- sqrt(mean(svm_err_all^2)))
+
+library(ggplot2)
+p1 <- ggplot(pl, aes(obs, pred))
+p1a <- p1 + geom_point(colour = "#9A8822", size = 1.3)+ theme_bw()+ geom_abline(slope=1,size = 0.6)+ geom_abline(intercept=8.3, slope=1, color="#F98400",size = 0.6,linetype=4)+geom_abline(intercept=-8.3, slope=1, color="#F98400",size = 0.6,linetype=4)+
+labs(title = "Urban 2-lane [trainset]")+labs(x = "Observed", y="Predicted")
+p1a
+
+
+### Urban Multi-lane
+svm.model <- svm(AVG_CRASH~., data = urbanmul_1, cost = 100, gamma =1)
+svm.pred  <- predict(svm.model, urbanmul_1[1:5])
+sd(svm.pred)
+pl <- cbind(obs= urbanmul_1$AVG_CRASH, pred=svm.pred)
+pl <- cbind(obs= urbanmul_1$AVG_CRASH, pred=abs(svm.pred), diff=abs(svm.pred)-urbanmul_1$AVG_CRASH)
+pl <- data.frame(pl)
+svm_err_all <- urbanmul_1$TOT_CRASH- svm.pred
+(svm_rmse1 <- sqrt(mean(svm_err_all^2)))
+
+library(ggplot2)
+p1 <- ggplot(pl, aes(obs, pred))
+p1a <- p1 + geom_point(colour = "#9A8822", size = 1.3)+ theme_bw()+ geom_abline(slope=1,size = 0.6)+ geom_abline(intercept=27.3, slope=1, color="#F98400",size = 0.6,linetype=4)+geom_abline(intercept=-27.3, slope=1, color="#F98400",size = 0.6,linetype=4)+
+labs(title = "Urban Multilane [trainset]")+labs(x = "Observed", y="Predicted")
+p1a
+
+### Urban Interstates
+svm.model <- svm(AVG_CRASH~., data = urbanint_1, cost = 100, gamma =1)
+svm.pred  <- predict(svm.model, urbanint_1[1:5])
+sd(svm.pred)
+pl <- cbind(obs= urbanint_1$AVG_CRASH, pred=svm.pred)
+pl <- cbind(obs= urbanint_1$AVG_CRASH, pred=abs(svm.pred), diff=abs(svm.pred)-urbanint_1$AVG_CRASH)
+pl <- data.frame(pl)
+svm_err_all <- urbanint_1$AVG_CRASH- svm.pred
+(svm_rmse1 <- sqrt(mean(svm_err_all^2)))
+
+library(ggplot2)
+p1 <- ggplot(pl, aes(obs, pred))
+p1a <- p1 + geom_point(colour = "#9A8822", size = 1.3)+ theme_bw()+ geom_abline(slope=1,size = 0.6)+ geom_abline(intercept=23.8, slope=1, color="#F98400",size = 0.6,linetype=4)+geom_abline(intercept=-23.8, slope=1, color="#F98400",size = 0.6,linetype=4)+
+labs(title = "Urban Interstates [trainset]")+labs(x = "Observed", y="Predicted")
+p1a
+
+```
+
+Conducted by: [Subasish Das](http://subasish.github.io)

@@ -1,0 +1,100 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+
+```{r fig.width=16, fig.height=13}
+setwd("/Users/subasishdas1/Desktop/wwc")
+list.files()
+
+am <- read.csv("Veh1_WWCSelec7.csv")
+dim(am)
+head(am)
+
+am1 <- na.omit(am)
+dim(am)
+dim(am1)
+
+summary(am)
+
+
+#am01 <- am[sample(nrow(am), 500), ]
+#dim(am01)
+
+
+
+head(am)
+library(FactoMineR)
+library(ggplot2)
+library(ggrepel)
+
+cats = apply(am1, 2, function(x) nlevels(as.factor(x)))
+cats
+
+mca1 = MCA(am1, graph = FALSE)
+a1 <- dimdesc(mca1)
+a1
+## write.csv(mca1$var$contrib, "w2_Cat_Dimen_Contri.csv")
+## mca1= MCA(am3)
+
+fviz_contrib(mca1, choice = "var", axes = 1)
+var <- get_mca_var(mca1)
+mca1$var$coord
+library("corrplot")
+corrplot(mca1$var$contrib, is.corr = FALSE)
+
+
+
+mca1_vars_df1 = data.frame(mca1$var$coord, Variable = rep(names(cats), cats))
+plotellipses(mca1, cex=1.2)
+```
+
+```{r fig.width=14, fig.height=10}
+library(RColorBrewer)
+mca1_vars_df <- read.csv("w2.csv")
+rownames(mca1_vars_df) <- mca1_vars_df[,1]
+
+ggplot(data=mca1_vars_df)+
+geom_point(aes(x = Dim.1, y = Dim.2, color='red', size=3)) +
+               geom_text_repel(aes(Dim.1, y = Dim.2, label = rownames(mca1_vars_df)), size=4, force=4)+
+  scale_y_continuous(breaks=seq(-3, 3, 0.2))+
+  scale_x_continuous(breaks=seq(-3, 3, 0.2))+theme_bw()+theme(legend.position="none")+
+  theme(text = element_text(size=16))
+
+
+
+```
+
+```{r fig.width=14, fig.height=9}
+
+ggplot(data=mca1_vars_df)+
+geom_point(aes(x = Dim.1, y = Dim.2, color='red', size=3)) +
+               geom_text_repel(aes(Dim.1, y = Dim.2, label = rownames(mca1_vars_df)), size=5, force=0.9)+
+  scale_y_continuous(limits = c(-0.7, -0.35))+
+  scale_x_continuous(limits = c(-0.37, 0.40))+theme_bw()+theme(legend.position="none")+
+  theme(text = element_text(size=22))
+
+ggplot(data=mca1_vars_df)+
+geom_point(aes(x = Dim.1, y = Dim.2, color='red', size=3)) +
+               geom_text_repel(aes(Dim.1, y = Dim.2, label = rownames(mca1_vars_df)), size=5, force=0.9)+
+  scale_y_continuous(limits = c(-0.35, 0))+
+  scale_x_continuous(limits = c(-0.7, 0.48))+theme_bw()+theme(legend.position="none")+
+  theme(text = element_text(size=22))
+
+
+
+ggplot(data=mca1_vars_df)+
+geom_point(aes(x = Dim.1, y = Dim.2, color='red', size=3)) +
+               geom_text_repel(aes(Dim.1, y = Dim.2, label = rownames(mca1_vars_df)), size=5, force=0.9)+
+  scale_y_continuous(limits = c(0, 0.5))+
+  scale_x_continuous(limits = c(-0.17, 0.8))+theme_bw()+theme(legend.position="none")+
+  theme(text = element_text(size=22))
+
+
+
+
+
+
+
+```
